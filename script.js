@@ -57,12 +57,14 @@ async function apiStopLine(line) {
 // =====================================================
 //  State + helpers
 // =====================================================
-const state = { filter: 'all', query: '', selected: null, lineFilter: null, qrLine: null, linesCollapsed: false, linesQuery: '' };
+const state = { filter: 'all', query: '', selected: null, lineFilter: null, qrLine: null, linesCollapsed: window.matchMedia('(max-width: 900px)').matches, linesQuery: '' };
 let qrTimer = null;
 
 const $ = (id) => document.getElementById(id);
 const linesEl = $('lines'), listEl = $('list'), filtersEl = $('filters');
 const searchInput = $('searchInput');
+const appEl = document.querySelector('.app');
+const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
 const emptyEl = $('empty'), chatInner = $('chatInner');
 const messagesEl = $('messages'), composer = $('composer'), msgInput = $('msgInput');
 const qrModal = $('qrModal'), qrBox = $('qrBox'), qrStatus = $('qrStatus');
@@ -335,8 +337,17 @@ function selectConversation(id) {
   conversations.find((x) => x.id === id).unread = 0;
   renderList();
   renderChat();
-  if (!msgInput.disabled) msgInput.focus();
+  if (isMobile()) appEl.classList.add('chat-open');
+  else if (!msgInput.disabled) msgInput.focus();
 }
+
+function closeChatMobile() {
+  appEl.classList.remove('chat-open');
+  state.selected = null;
+  renderList();
+}
+$('backBtn').addEventListener('click', closeChatMobile);
+window.addEventListener('resize', () => { if (!isMobile()) appEl.classList.remove('chat-open'); });
 
 listEl.addEventListener('click', (e) => {
   const row = e.target.closest('.row');
@@ -379,4 +390,4 @@ $('refreshBtn').addEventListener('click', renderAll);
 // =====================================================
 renderLines();
 renderList();
-selectConversation(2);
+if (!isMobile()) selectConversation(2);   // على الموبايل نبدأ بالقائمة
